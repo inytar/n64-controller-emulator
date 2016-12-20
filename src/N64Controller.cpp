@@ -15,34 +15,32 @@ void N64Controller::init() {
 
 void N64Controller::write1(unsigned startTime) {
     /* Serial.print('1'); */
-    while (true) {
-        if (inputStart >= startTime) {
-            break;
-        }
-    }
     digitalWriteFast(_pin, LOW);
-    while (true) {
-        if (inputStart >= (startTime + 1)) {
-            break;
-        }
+    int i = 0;
+    while (i < 5000) {
+        i++;
     }
     digitalWriteFast(_pin, HIGH);
+    delayMicroseconds(2);
+    i = 0;
+    while (i < 500) {
+        i++;
+    }
 }
 
 void N64Controller::write0(unsigned startTime) {
     /* Serial.print('0'); */
-    while (true) {
-        if (inputStart >= startTime) {
-            break;
-        }
-    }
     digitalWriteFast(_pin, LOW);
-    while (true) {
-        if (inputStart >= (startTime + 3)) {
-            break;
-        }
+    delayMicroseconds(2);
+    int i = 0;
+    while (i < 500) {
+        i++;
     }
     digitalWriteFast(_pin, HIGH);
+    i = 0;
+    while (i < 500) {
+        i++;
+    }
 }
 
 void N64Controller::writeStop(unsigned startTime) {
