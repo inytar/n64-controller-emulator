@@ -13,6 +13,14 @@ void setup() {
 }
 
 void loop() {
-    n64Controller.write(1);
-    delay(400);
+    bool arr[32] = {false};
+    arr[31] = true;
+    n64Controller.testLoop();
+    delay(100);
+    /* n64Controller.writenoloop2(1); */
+    /* delay(30); */
+    /* n64Controller.writenoloop2(9); */
+    /* delay(40); */
+    /* n64Controller.writenoloop3(arr); */
+    /* delay(50); */
 }
