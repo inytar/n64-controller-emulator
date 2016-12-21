@@ -1,26 +1,83 @@
 #include <Arduino.h>
 
-#include "N64Controller.h"
-
 const int pin = 12;
+#define SEQLEN 32
 
-N64Controller n64Controller(pin);
+IntervalTimer timer;
+uint32_t seq;
+unsigned currBit = 0;
+bool flip = true;
 
 void setup() {
-    n64Controller.init();
+    init();
     Serial.begin(9600);
-    delay(3000);
+    delay(100);
 }
 
 void loop() {
-    bool arr[32] = {false};
-    arr[31] = true;
-    n64Controller.testLoop();
-    delay(100);
-    /* n64Controller.writenoloop2(1); */
-    /* delay(30); */
-    /* n64Controller.writenoloop2(9); */
-    /* delay(40); */
-    /* n64Controller.writenoloop3(arr); */
-    /* delay(50); */
+    seq = 5;
+    test2Loop();
+    delay(10);
+}
+
+void init() {
+    pinMode(pin, OUTPUT);
+    digitalWriteFast(pin, HIGH);
+    // Set pin interupt
+}
+
+void writeNextHighLow() {
+    if ((1 << (SEQLEN - currBit - 1)) & seq) {
+        digitalWriteFast(pin, HIGH);
+    } else {
+        digitalWriteFast(pin, LOW);
+    }
+    currBit++;
+    if (currBit >= SEQLEN) {
+        timer.end();
+        currBit = 0;
+    }
+}
+
+void testLoop() {
+    timer.begin(writeNextHighLow, 2);
+    timer.priority(0);
+}
+
+void writeHigh() {
+    digitalWrite(pin, HIGH);
+    /*digitalWriteFast(pin, HIGH);
+    digitalWriteFast(pin, HIGH);
+    digitalWriteFast(pin, HIGH);
+    digitalWriteFast(pin, HIGH);
+    digitalWriteFast(pin, HIGH);
+    digitalWriteFast(pin, HIGH);
+    digitalWriteFast(pin, HIGH);
+    digitalWriteFast(pin, HIGH);
+    digitalWriteFast(pin, HIGH);
+    digitalWriteFast(pin, HIGH);
+    digitalWriteFast(pin, HIGH);*/
+}
+
+void writeLow() {
+    digitalWrite(pin, LOW);
+    /*digitalWriteFast(pin, LOW);
+    digitalWriteFast(pin, LOW);
+    digitalWriteFast(pin, LOW);
+    digitalWriteFast(pin, LOW);
+    digitalWriteFast(pin, LOW);
+    digitalWriteFast(pin, LOW);
+    digitalWriteFast(pin, LOW);
+    digitalWriteFast(pin, LOW);
+    digitalWriteFast(pin, LOW);
+    digitalWriteFast(pin, LOW);*/
+}
+
+void test2Loop() {
+    writeLow();
+    writeHigh();
+    writeLow();
+    writeHigh();
+    writeLow();
+    writeHigh();
 }
