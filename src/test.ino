@@ -1,9 +1,10 @@
 #include <Arduino.h>
 
 const int pin = 12;
+// Length of input sequence 4 units per bit (32 bits)
 #define SEQLEN 132
 
-// Button refs
+// Input refs
 #define A 0
 #define B 1
 #define Z 2
@@ -22,33 +23,28 @@ const int pin = 12;
 #define X 16
 #define Y 24
 
+// Frame counter
 int frame;
-volatile bool sentLast = true;
 
+// Request Bit Counter - counts bits in the console request byte
+int requestBitCounter;
+
+// Keeps track of whether the last input was sent
+volatile bool sentLast;
+
+// Arrays to define input sequences to be sent to console
 bool seq[SEQLEN] = {false};
 bool emptyAction[SEQLEN] = {false};
 
-unsigned currBit = 0;
-bool flip = true;
+// Timer for interpreting console request
+elapsedMicros requestTimer;
 
 void setup() {
-    init();
     Serial.begin(9600);
+    delay(500);
     Serial.print("Starting Program");
     Serial.println();
-    delay(500);
-    Serial.print("Ready");
-    Serial.println();
-    attachInterrupt(digitalPinToInterrupt(pin), writeSeq, FALLING);
-}
-
-void loop() {
-    if (sentLast) {
-        nextCommand();
-        noInterrupts();
-        sentLast = false;
-        interrupts();
-    }
+    init();
 }
 
 void init() {
@@ -62,36 +58,72 @@ void init() {
     emptyAction[131] = true;
     resetSeq();
 
+    // Set initial values
     frame = 0;
+    sentLast = true;
+    requestBitCounter = 0;
 
-    pinMode(pin, INPUT);
     // Set pin interupt
+    pinMode(pin, INPUT);
+    attachInterrupt(digitalPinToInterrupt(pin), getResponse, FALLING);
 }
 
-void writeSeq() {
-    noInterrupts();
-    delayMicroseconds(32);
+void loop() {
+    if (sentLast) {
+        nextCommand();
+        noInterrupts();
+        sentLast = false;
+        interrupts();
+    }
+}
+
+void getResponse() {
+    detachInterrupt(digitalPinToInterrupt(pin));
+    attachInterrupt(digitalPinToInterrupt(pin), count, RISING);
+}
+
+void count() {
+    requestBitCounter++;
+    if (requestBitCounter >= 8) {
+        noInterrupts();
+        writeSeq(requestTimer <= 2);
+        interrupts();
+
+        requestBitCounter = 0;
+        attachInterrupt(digitalPinToInterrupt(pin), getResponse, FALLING);
+    } else if (requestBitCounter >= 7) {
+        requestTimer = 0;
+    }
+}
+
+void writeSeq(bool input) {
+    bool *response;
+    if (input) {
+        response = seq;
+        sentLast = true;
+    } else {
+        response = emptyAction;
+    }
+
+    // Switch in pin mode dettaches (pin, count, RISING) interrupt
     pinMode(pin, OUTPUT);
     for (int i=0 ; i<SEQLEN ; i++) {
-        if (seq[i]) {
+        if (response[i]) {
             digitalWrite(pin, HIGH);
         } else {
             digitalWrite(pin, LOW);
         }
     }
     pinMode(pin, INPUT);
-    attachInterrupt(digitalPinToInterrupt(pin), writeSeq, FALLING);
-    sentLast = true;
-    interrupts();
 }
 
 void nextCommand() {
     resetSeq();
 
-    if (frame == 0 || frame == 1){
+    if (frame == 0){
         pressButton(cU);
     }
-    if (frame == 3 || frame == 4) {
+    if (frame == 3) {
         pressButton(B);
     }
     setAxis(Y, -80);
