@@ -24,6 +24,7 @@ const int pin = 12;
 
 int frame;
 volatile bool sentLast = true;
+IntervalTimer setCommand;
 
 bool seq[SEQLEN] = {false};
 bool emptyAction[SEQLEN] = {false};
@@ -40,11 +41,12 @@ void setup() {
     Serial.print("Ready");
     Serial.println();
     attachInterrupt(digitalPinToInterrupt(pin), writeSeq, FALLING);
+    setCommand.priority(0);
+    setCommand.begin(nextCommand, 400);
 }
 
 void loop() {
     if (sentLast) {
-        nextCommand();
         noInterrupts();
         sentLast = false;
         interrupts();
@@ -70,6 +72,7 @@ void init() {
 
 void writeSeq() {
     noInterrupts();
+    setCommand.end();
     delayMicroseconds(32);
     pinMode(pin, OUTPUT);
     for (int i=0 ; i<SEQLEN ; i++) {
@@ -82,6 +85,7 @@ void writeSeq() {
     pinMode(pin, INPUT);
     attachInterrupt(digitalPinToInterrupt(pin), writeSeq, FALLING);
     sentLast = true;
+    setCommand.begin(nextCommand, 4000);
     interrupts();
 }
 
@@ -100,6 +104,7 @@ void nextCommand() {
     if (frame > 13) {
         frame = 0;
     }
+    setCommand.end();
 }
 
 void pressButton(int button) {
