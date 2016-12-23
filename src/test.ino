@@ -2,6 +2,7 @@
 
 const int pin = 12;
 #define SEQLEN 132
+#define BUFFLEN 4
 
 // Button refs
 #define A 0
@@ -23,7 +24,12 @@ const int pin = 12;
 #define Y 24
 
 int frame;
-volatile bool sentLast = true;
+volatile bool sentLast;
+volatile int8_t bttn1;
+volatile int8_t bttn2;
+volatile int8_t xAxis;
+volatile int8_t yAxis;
+
 IntervalTimer setCommand;
 
 bool seq[SEQLEN] = {false};
@@ -34,7 +40,7 @@ bool flip = true;
 
 void setup() {
     init();
-    Serial.begin(9600);
+    Serial.begin(115200);
     Serial.print("Starting Program");
     Serial.println();
     delay(500);
@@ -46,11 +52,18 @@ void setup() {
 }
 
 void loop() {
-    if (sentLast) {
-        noInterrupts();
-        sentLast = false;
-        interrupts();
+    int count = 0;
+    int8_t buff[BUFFLEN];
+    while (count<BUFFLEN) {
+        if (Serial.available() && sentLast) {
+            buff[count++] = Serial.read();
+        }
     }
+    bttn1 = buff[0];
+    bttn2 = buff[1];
+    xAxis = buff[2];
+    yAxis = buff[3];
+    sentLast = false;
 }
 
 void init() {
@@ -65,6 +78,11 @@ void init() {
     resetSeq();
 
     frame = 0;
+    sentLast = true;
+    bttn1 = 0;
+    bttn2 = 0;
+    xAxis = 0;
+    yAxis = 0;
 
     pinMode(pin, INPUT);
     // Set pin interupt
@@ -84,27 +102,76 @@ void writeSeq() {
     }
     pinMode(pin, INPUT);
     attachInterrupt(digitalPinToInterrupt(pin), writeSeq, FALLING);
-    sentLast = true;
     setCommand.begin(nextCommand, 4000);
     interrupts();
 }
 
 void nextCommand() {
+    setCommand.end();
     resetSeq();
 
-    if (frame == 0 || frame == 1){
-        pressButton(cU);
+    for (int i=0 ; i<8 ; i++){
+        if ((1<<i) & bttn1) {
+            pressButton(i);
+        }
+        if ((1<<i) & bttn2) {
+            pressButton(i + 8);
+        }
     }
-    if (frame == 3 || frame == 4) {
+    
+    setAxis(X, xAxis);
+    setAxis(Y, yAxis);
+
+    bttn1 = 0;
+    bttn2 = 0;
+    xAxis = 0;
+    yAxis = 0;
+
+    sentLast = true;
+
+    /*
+    if ((1<<0) & bttn1) {
+        pressButton(A);
+    }
+    if ((1<<1) & bttn1) {
         pressButton(B);
     }
-    setAxis(Y, -80);
-    setAxis(X, 40);
-    frame++;
-    if (frame > 13) {
-        frame = 0;
+    if ((1<<2) & bttn1) {
+        pressButton(Z);
     }
-    setCommand.end();
+    if ((1<<3) & bttn1) {
+        pressButton(S);
+    }
+    if ((1<<4) & bttn1) {
+        pressButton(dU);
+    }
+    if ((1<<5) & bttn1) {
+        pressButton(dD);
+    }
+    if ((1<<6) & bttn1) {
+        pressButton(dL);
+    }
+    if ((1<<7) & bttn2) {
+        pressButton(dR);
+    }
+    if ((1<<2) & bttn2) {
+        pressButton(L);
+    }
+    if ((1<<3) & bttn2) {
+        pressButton(R);
+    }
+    if ((1<<4) & bttn2) {
+        pressButton(cU);
+    }
+    if ((1<<5) & bttn2) {
+        pressButton(cD);
+    }
+    if ((1<<6) & bttn2) {
+        pressButton(cL);
+    }
+    if ((1<<7) & bttn2) {
+        pressButton(cR);
+    } */
 }
 
 void pressButton(int button) {
