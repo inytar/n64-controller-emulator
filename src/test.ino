@@ -118,7 +118,7 @@ void nextCommand() {
             pressButton(i + 8);
         }
     }
-    
+
     setAxis(X, xAxis);
     setAxis(Y, yAxis);
 
@@ -127,6 +127,7 @@ void nextCommand() {
     xAxis = 0;
     yAxis = 0;
 
+    Serial.print('p');
     sentLast = true;
 
     /*
