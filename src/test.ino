@@ -127,7 +127,7 @@ void nextCommand() {
     xAxis = 0;
     yAxis = 0;
 
-    Serial.print('p');
+    //Serial.print('p');
     sentLast = true;
 
     /*
