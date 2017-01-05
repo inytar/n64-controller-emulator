@@ -12,32 +12,32 @@ def main():
     ser = serial.Serial(port, baudrate=115200)
     print(ser.name)
     x = 40
-    #count = 0
+    count = 0
     while True:
-        x = random.randint(-80, 80)
-        y = random.randint(-80, 80)
-        buttons = random.randint(0, 2**16 - 1)
-        if buttons & 2**3:
-            buttons -= 2**3
-        if buttons & 2**1:
-            #p = random.randrange(10)
-            #if p > 0:
-            buttons -= 2**1
-        if buttons & 2**11:
-            buttons -= 2**11
-        #buttons = buttons & 2**3
-        ser.write(get_write_value(buttons, x, y))
-        #ser.write(get_write_value('cU',x=x))
-        #ser.write(get_write_value(x=x))
-        #ser.write(get_write_value(x=x))
-        #ser.write(get_write_value('B', y=-80, x=x))
-        #for _ in xrange(9):
-        #    ser.write(get_write_value())
-        #ser.write(get_write_value(y=40))
-        #count += 1
-        #if count >= 5:
-        #    x *= -1
-        #    count = 0
+        # x = random.randint(-80, 80)
+        # y = random.randint(-80, 80)
+        # buttons = random.randint(0, 2**16 - 1)
+        # if buttons & 2**3:
+        #     buttons -= 2**3
+        # if buttons & 2**1:
+        #     #p = random.randrange(10)
+        #     #if p > 0:
+        #     buttons -= 2**1
+        # if buttons & 2**11:
+        #     buttons -= 2**11
+        # # buttons = buttons & 2**3
+        # ser.write(get_write_value(buttons, x, y))
+        ser.write(get_write_value('cU',x=x))
+        ser.write(get_write_value(x=x))
+        ser.write(get_write_value(x=x))
+        ser.write(get_write_value('B', y=-80, x=x))
+        for _ in xrange(9):
+            ser.write(get_write_value())
+        ser.write(get_write_value(y=40))
+        count += 1
+        if count >= 5:
+            x *= -1
+            count = 0
 
 
 def get_write_value(buttons='', x=0, y=0):
